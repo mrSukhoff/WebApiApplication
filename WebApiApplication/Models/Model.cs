@@ -85,8 +85,25 @@ namespace WebApiApplication.Models
         }
 
         public void SaveList(IEnumerable<Pair> list)
+        {
+            string sqlExpression;
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
+                connection.Open();
+                SqlCommand clearCommand = new SqlCommand("DELETE Records;",connection);
+                clearCommand.ExecuteNonQuery();
 
-            }
+                SqlCommand addCommand;
+                int i = 0;
+                foreach (Pair p in list)
+                {
+                    sqlExpression = "INSERT INTO Records (Id,Code,Value) VALUES (" + i + "," + p.Code + ",'" + p.Value.Trim('"') + "');";
+                    addCommand = new SqlCommand(sqlExpression, connection);
+                    addCommand.ExecuteNonQuery();
+                    i++;
+                }
+
+             }
+        }
     }
 }
