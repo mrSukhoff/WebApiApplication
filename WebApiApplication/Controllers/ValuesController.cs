@@ -1,11 +1,6 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Web.Http;
-using System.Web.Script.Serialization;
 using WebApiApplication.Models;
 
 namespace WebApiApplication.Controllers
@@ -13,31 +8,35 @@ namespace WebApiApplication.Controllers
     public class ValuesController : ApiController
     {
         Model m = new Model();
-        string tmp;
 
-        //GET
+        /// <summary>
+        /// Контроллер GET. Возвращает весь список записей из базы
+        /// </summary>
         public IEnumerable<Record> Get()
         {
             return m.GetAllRecords();
         }
 
-        // GET api/values/5
+
+        /// <summary>
+        ///  Контроллер GET. Возвращает из базы запись с идентификатором N из /values/api/N
+        /// </summary>
         public Record Get(int id)
         {
             return m.GetRecordWithId(id);
         }
 
-        // POST api/values
+        /// <summary>
+        /// По запросу POST api/values разбирает json на строки, сортирует и передает для занесения в базу
+        /// </summary>
+
         public async void Post()
         {
-            
-            
-            char[] symbols1 = {'[',']'};
-            char[] symbols2 = { '{', '}' };
             //получаем тело запроса в виде строки
             string str =await Request.Content.ReadAsStringAsync();
 
             //удаляем квадратные скобки
+            char[] symbols1 = { '[', ']' };
             str = str.Trim(symbols1);
 
             //делим строку на подстроки
@@ -47,9 +46,10 @@ namespace WebApiApplication.Controllers
             List<Pair> list = new List<Pair>();
             try
             {
+                char[] symbols2 = { '{', '}' };
                 foreach (string line in pairs)
                 {
-                    //убираем фигурные скобки и делим каждую пару
+                    //убираем фигурные скобки и делим каждую пару на ключ и значение
                     string[] lines = line.Trim(symbols2).Split(':');
                     Pair p = new Pair
                     {
@@ -58,25 +58,13 @@ namespace WebApiApplication.Controllers
                     };
                     list.Add(p); // добавляем пару в список
                 }
-                list.Sort(); //в конце сортируем его
+                list.Sort(); //в конце сортируем его. Сортировка идёт по полю "Code" - сравнение прописано в объекте.
                 m.SaveList(list);
             }
             catch (Exception ex)
             {
                 //nobody care :(
             }
-        }
-
-
-
-        // PUT api/values/5
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/values/5
-        public void Delete(int id)
-        {
         }
     }
 }
