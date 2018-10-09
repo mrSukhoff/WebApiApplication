@@ -6,20 +6,30 @@ namespace WebApiApplication.Models
 {
     public class Model
     {
-        public string ConnectionInfo { get; set; }
-
-        public string ConnectionString { get; }
-
+        public string ConnectionString { get;}
+        private static bool created = false;
         public Model()
         {
             ConnectionString = ConfigurationManager.ConnectionStrings["RecordsConnection"].ConnectionString;
-            
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+
+            //если таблицу уже создавали - выходим
+            if (created) return;
+            //пытаемся удалить и создать таблицу
+            try
             {
-                connection.Open();
-                ConnectionInfo = connection.Database + " - " + connection.State; 
+                using (SqlConnection connection = new SqlConnection(ConnectionString))
+                {
+                    connection.Open();
+                    string expression = "DROP TABLE [dbo].[Records];";
+                    SqlCommand dropCommand = new SqlCommand(expression, connection);
+                    dropCommand.ExecuteNonQuery(); 
+                    expression = "CREATE TABLE [dbo].[Records] ([Id] INT NOT NULL, [Code] INT NOT NULL, [Value] NVARCHAR(MAX) NULL);";
+                    SqlCommand createCommand = new SqlCommand(expression, connection);
+                    createCommand.ExecuteNonQuery();
+                    created = true;
+                }
             }
-            
+            catch { };
         }
         
         /// <summary>
@@ -32,21 +42,21 @@ namespace WebApiApplication.Models
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
-                SqlCommand command = new SqlCommand(sqlExpression, connection);
-                SqlDataReader reader = command.ExecuteReader();
+                SqlCommand readCommand = new SqlCommand(sqlExpression, connection);
+                SqlDataReader reader = readCommand.ExecuteReader();
 
                 if (reader.HasRows) 
                 {
                     
                     while (reader.Read()) // построчно считываем данные
                     {
-                        Record rec = new Record
+                        Record rec = new Record //создаем запись
                         {
                             Id = (int)reader.GetValue(0),
                             Code = (int)reader.GetValue(1),
                             Value = reader.GetValue(2).ToString()
                         };
-                        records.Add(rec);
+                        records.Add(rec); //и добавляем ее в список
                     }
                 }
                 reader.Close();
