@@ -7,29 +7,27 @@ namespace WebApiApplication.Controllers
 {
     public class ValuesController : ApiController
     {
-        Model m = new Model();
+        RecordContext db = new RecordContext();
 
         /// <summary>
         /// Контроллер GET. Возвращает весь список записей из базы
         /// </summary>
         public IEnumerable<Record> Get()
         {
-            return m.GetAllRecords();
+            return db.Records;
         }
-
 
         /// <summary>
         ///  Контроллер GET. Возвращает из базы запись с идентификатором N из /values/api/N
         /// </summary>
         public Record Get(int id)
         {
-            return m.GetRecordWithId(id);
+            return db.Records.Find(id);
         }
 
         /// <summary>
         /// По запросу POST api/values разбирает json на строки, сортирует и передает для занесения в базу
         /// </summary>
-
         public async void Post()
         {
             //получаем тело запроса в виде строки
@@ -42,8 +40,8 @@ namespace WebApiApplication.Controllers
             //делим строку на подстроки
             string[] pairs = str.Split(',');
 
-            //создаем список пар
-            List<Pair> list = new List<Pair>();
+            //создаем список записей
+            List<Record> list = new List<Record>();
             try
             {
                 char[] symbols2 = { '{', '}' };
@@ -51,20 +49,33 @@ namespace WebApiApplication.Controllers
                 {
                     //убираем фигурные скобки и делим каждую пару на ключ и значение
                     string[] lines = line.Trim(symbols2).Split(':');
-                    Pair p = new Pair
+                    Record rec = new Record
                     {
                         Code = int.Parse(lines[0]),
-                        Value = lines[1]
+                        Value = lines[1].Trim('"')
                     };
-                    list.Add(p); // добавляем пару в список
+                    list.Add(rec); // добавляем каждую пару в список
                 }
-                list.Sort(); //в конце сортируем его. Сортировка идёт по полю "Code" - сравнение прописано в объекте.
-                m.SaveList(list);
+
+                list.Sort(); //в конце сортируем его. 
+
+                //чистим базу
+                db.Records.RemoveRange(db.Records);
+                db.SaveChanges();
+
+                //добавляем список в базу
+                foreach (Record rec in list)
+                {
+                    db.Records.Add(rec);
+                }
+                db.SaveChanges();
+                var tmp = db.Records;
             }
             catch (Exception ex)
             {
                 //nobody care :(
             }
+            
         }
     }
 }
