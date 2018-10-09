@@ -92,6 +92,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Model.cs" />
+    <Compile Include="Models\Pair.cs" />
     <Compile Include="Models\Record.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

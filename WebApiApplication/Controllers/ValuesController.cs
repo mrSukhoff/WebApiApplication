@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -12,7 +13,7 @@ namespace WebApiApplication.Controllers
     public class ValuesController : ApiController
     {
         Model m = new Model();
-       string tmp;
+        string tmp;
 
         //GET
         public IEnumerable<Record> Get()
@@ -27,11 +28,45 @@ namespace WebApiApplication.Controllers
         }
 
         // POST api/values
-        public void Post([FromBody]string value)
+        public async void Post()
         {
-            tmp = value;
             
+            
+            char[] symbols1 = {'[',']'};
+            char[] symbols2 = { '{', '}' };
+            //получаем тело запроса в виде строки
+            string str =await Request.Content.ReadAsStringAsync();
+
+            //удаляем квадратные скобки
+            str = str.Trim(symbols1);
+
+            //делим строку на подстроки
+            string[] pairs = str.Split(',');
+
+            //создаем список пар
+            List<Pair> list = new List<Pair>();
+            try
+            {
+                foreach (string line in pairs)
+                {
+                    //убираем фигурные скобки и делим каждую пару
+                    string[] lines = line.Trim(symbols2).Split(':');
+                    Pair p = new Pair
+                    {
+                        Code = int.Parse(lines[0]),
+                        Value = lines[1]
+                    };
+                    list.Add(p); // добавляем пару в список
+                }
+                list.Sort(); //в конце сортируем его
+                m.SaveList(list);
+            }
+            catch (Exception ex)
+            {
+                //nobody care :(
+            }
         }
+
 
 
         // PUT api/values/5

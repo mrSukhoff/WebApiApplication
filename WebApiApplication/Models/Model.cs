@@ -84,6 +84,9 @@ namespace WebApiApplication.Models
             return rec;
         }
 
+        public void SaveList(IEnumerable<Pair> list)
+            {
 
+            }
     }
 }
